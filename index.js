@@ -1,4 +1,4 @@
-import { Cube } from './cube.js';
+import {Cube} from './cube.js';
 import cubeFragmentShader from "./frag_shader.js";
 import cubeVertexShader from "./vert_shader.js";
 import texture1 from "./textures/1.png"
@@ -20,6 +20,7 @@ const sceneState = {
 
     lightShininess: NaN,
 }
+
 function update() {
     sceneState.lightPower = parseFloat(document.querySelector('#lightPower').value);
     sceneState.dampingFunction = parseInt(document.querySelector('.dampingFunction').value)
@@ -55,17 +56,15 @@ document.querySelector('.shading').addEventListener('change', update);
 document.querySelector('.lightModel').addEventListener('change', update);
 
 const rotateEachCube = (obj, Matrix, rad) => obj.rotate(Matrix, rad, [0, 1, 0]);
+
 //Сцена
 class Scene {
     constructor(webgl_context, vertex_shader, fragment_shader, store, textures) {
         this.gl = webgl_context;
         this.textures = textures;
         this.state = store;
+        this.setupTextures([texture1, texture1, texture2, texture3]);
         const shaderProgram = this.initShadersProgram(vertex_shader, fragment_shader);
-        this.setupTextures(texture1);
-        //this.setupTextures(texture1);
-        //this.setupTextures(texture2);
-        //this.setupTextures(texture3);
         this.programInfo = {
             program: shaderProgram,
             attribLocations: {
@@ -94,10 +93,10 @@ class Scene {
             }
         }
         this.objects = [
-            new Cube(this.gl, 0.8, [221/255, 1, 0, 1], [0, -0.2, -10]),
-            new Cube(this.gl, 0.8, [221/255, 1, 0, 1], [0, 1.4, -10]),
-            new Cube(this.gl, 0.9, [192/255, 192/255, 192/255, 1], [-1.7, -0.1, -10]),
-            new Cube(this.gl, 0.8, [166/255, 124/255, 0, 1], [1.58, -0.2, -10]),
+            new Cube(this.gl, 0.8, [221 / 255, 1, 0, 1], [0, -0.2, -10]),
+            new Cube(this.gl, 0.8, [221 / 255, 1, 0, 1], [0, 1.4, -10]),
+            new Cube(this.gl, 0.9, [192 / 255, 192 / 255, 192 / 255, 1], [-1.7, -0.1, -10]),
+            new Cube(this.gl, 0.8, [166 / 255, 124 / 255, 0, 1], [1.58, -0.2, -10]),
         ];
         this.fieldOfView = 45 * Math.PI / 180;
         this.aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
@@ -131,20 +130,18 @@ class Scene {
     }
 
 
-    setupTextures(path) {
-        // Создайте текстуру
-        const texture = this.gl.createTexture();
+    setupTextures(paths) {
+        paths.forEach((path, index) => {
+            const texture = this.gl.createTexture();
 
-        // Загрузите изображение текстуры
-        const image = new Image();
-        image.onload = () => {
-            // При успешной загрузке изображения обработайте текстуру
-            this.handleTextureLoaded(image, texture);
-        };
-        image.src = path; // Подставьте путь к вашей текстуре
+            const image = new Image();
+            image.onload = () => {
+                this.handleTextureLoaded(image, texture);
+            };
+            image.src = path;
 
-        // Добавьте текстуру в массив текстур
-        this.textures.push(texture);
+            this.textures.push(texture);
+        });
     }
 
 
@@ -156,7 +153,7 @@ class Scene {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         const projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, this.fieldOfView, this.aspect, this.zNear, this.zFar);
-        this.objects.forEach(obj => {
+        this.objects.forEach((obj, index) => {
             var modelViewMatrix = mat4.create();
             obj.toPosition(modelViewMatrix);
             rotateEachCube(obj, modelViewMatrix, curRotations[0]);
@@ -177,28 +174,18 @@ class Scene {
             this.gl.uniform1i(this.programInfo.uniformLocations.shading, this.state.shading);
             this.gl.uniform1f(this.programInfo.uniformLocations.lightShininess, this.state.lightShininess);
 
-            //this.gl.activeTexture(this.gl.TEXTURE0);
 
-            // this.textures.forEach((texture, index) => {
-            //     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-            //     this.gl.uniform1i(this.programInfo.uniformLocations.uSampler, 0);
-            //     const buffers = obj.getBuffers();
-            //     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-            //
-            //     this.gl.drawElements(this.gl.TRIANGLES, buffers.raw_indices.length, this.gl.UNSIGNED_SHORT, 0);
-            // });
-            this.gl.activeTexture(this.gl.TEXTURE0);
+            const texture = this.textures[index];
+            const textureUnit = this.gl.TEXTURE0 + index;
 
-            this.textures.forEach((texture, index) => {
-                this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-                this.gl.uniform1i(this.programInfo.uniformLocations.uSampler, index);
+            this.gl.activeTexture(textureUnit);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+            this.gl.uniform1i(this.programInfo.uniformLocations.uSampler, index);
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
-                const buffers = obj.getBuffers();
-                this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+            this.gl.drawElements(this.gl.TRIANGLES, buffers.raw_indices.length, this.gl.UNSIGNED_SHORT, 0);
 
-                this.gl.drawElements(this.gl.TRIANGLES, buffers.raw_indices.length, this.gl.UNSIGNED_SHORT, 0);
-            });
-            //this.gl.drawElements(this.gl.TRIANGLES, buffers.raw_indices.length, this.gl.UNSIGNED_SHORT, 0);
+
         });
         curRotations[currentMode] += currentSpeed;
     }
@@ -216,6 +203,7 @@ class Scene {
         }
         return shaderProgram;
     }
+
     loadShader(gl, type, source) {
         const shader = gl.createShader(type);
         gl.shaderSource(shader, source);
