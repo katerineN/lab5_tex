@@ -112,6 +112,44 @@ export class Cube {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.textureCoordinates), this.gl.STATIC_DRAW);
 
+
+        this.iceTextureCoordinates = [
+            // Front
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            // Back
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            0.0, 0.0,
+            // Top
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            // Bottom
+            1.0, 1.0,
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+            // Right
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            0.0, 0.0,
+            // Left
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+        ];
+
+        this.iceTextureCoordBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.iceTextureCoordBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.iceTextureCoordinates), this.gl.STATIC_DRAW);
+
     }
 
     getBuffers() {
@@ -121,6 +159,7 @@ export class Cube {
             indices: this.triangleBuffer,
             normal: this.normalBuffer,
             texture: this.textureCoordBuffer,
+            iceTexture: this.iceTextureCoordBuffer,
 
             raw_position: this.positions,
             raw_color: this.faceColors,
@@ -147,7 +186,12 @@ export class Cube {
         gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
         gl.vertexAttribPointer(programInfo.attribLocations.textureCoord,2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+
+        gl.bindBuffer(this.gl.ARRAY_BUFFER, this.iceTextureCoordBuffer);
+        gl.vertexAttribPointer(programInfo.attribLocations.iceTextureCoord,2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(programInfo.attribLocations.iceTextureCoord);
     }
+
 
     // getTextures() {
     //     // Возвращаем массив текстур вашего объекта

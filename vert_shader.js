@@ -4,6 +4,7 @@ attribute vec4 aVertexPosition;
 attribute vec4 aVertexColor;
 attribute vec3 aNormal;
 attribute vec2 aTextureCoord;
+attribute vec2 iceTextureCoord;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
@@ -12,6 +13,7 @@ varying vec4 vPosition;
 varying vec4 vColor;
 varying vec3 vNormal;
 varying vec2 vTextureCoord;
+varying vec2 vIceTextureCoord;
 
 uniform float uLightPower;
 uniform vec3 uLightDirection;
@@ -21,6 +23,7 @@ uniform lowp int uLightModel;
 uniform float uLightShininess;
 
 uniform sampler2D uSampler;
+uniform sampler2D uSampler2;
 
 ${shaderFunctions}
 void main(void) {
@@ -40,6 +43,7 @@ void main(void) {
     vPosition = aVertexPosition;
     vNormal = normal;
     vTextureCoord = aTextureCoord;
+    vIceTextureCoord = iceTextureCoord;
 }`
 
 export default cubeVertexShader;

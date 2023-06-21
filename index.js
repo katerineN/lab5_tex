@@ -1,9 +1,11 @@
 import {Cube} from './cube.js';
 import cubeFragmentShader from "./frag_shader.js";
 import cubeVertexShader from "./vert_shader.js";
+
 import texture1 from "./textures/1.png"
 import texture2 from "./textures/2.png"
 import texture3 from "./textures/3.png"
+import iceTexture from "./textures/ice.jpg"
 
 let textures = [];
 
@@ -19,6 +21,7 @@ const sceneState = {
     lightSpecular: NaN,
 
     lightShininess: NaN,
+    textureSelect: NaN,
 }
 
 function update() {
@@ -29,6 +32,7 @@ function update() {
 
     sceneState.shading = parseInt(document.querySelector('.shading').value)
     sceneState.lightModel = parseInt(document.querySelector('.lightModel').value)
+    sceneState.textureSelect = parseInt(document.querySelector('.textureSelect').value);
 }
 
 //Повороты
@@ -54,6 +58,7 @@ document.querySelector('#lightPower').addEventListener('change', update);
 document.querySelector('.dampingFunction').addEventListener('change', update);
 document.querySelector('.shading').addEventListener('change', update);
 document.querySelector('.lightModel').addEventListener('change', update);
+document.querySelector('.textureSelect').addEventListener('change', update);
 
 const rotateEachCube = (obj, Matrix, rad) => obj.rotate(Matrix, rad, [0, 1, 0]);
 
@@ -63,7 +68,7 @@ class Scene {
         this.gl = webgl_context;
         this.textures = textures;
         this.state = store;
-        this.setupTextures([texture1, texture1, texture2, texture3]);
+        this.setupTextures([texture1, texture2, texture3, iceTexture]);
         const shaderProgram = this.initShadersProgram(vertex_shader, fragment_shader);
         this.programInfo = {
             program: shaderProgram,
@@ -72,6 +77,7 @@ class Scene {
                 vertexColor: this.gl.getAttribLocation(shaderProgram, 'aVertexColor'),
                 normal: this.gl.getAttribLocation(shaderProgram, 'aNormal'),
                 textureCoord: this.gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
+                iceTextureCoord: this.gl.getAttribLocation(shaderProgram, 'iceTextureCoord'),
             },
             uniformLocations: {
                 projectionMatrix: this.gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
@@ -90,11 +96,12 @@ class Scene {
 
                 lightShininess: this.gl.getUniformLocation(shaderProgram, 'uLightShininess'),
                 uSampler: this.gl.getUniformLocation(shaderProgram, 'uSampler'),
+                uSampler2: this.gl.getUniformLocation(shaderProgram, 'uSampler2'),
+                textureSelect: this.gl.getUniformLocation(shaderProgram, 'uTextureSelect'),
             }
         }
         this.objects = [
-            new Cube(this.gl, 0.8, [221 / 255, 1, 0, 1], [0, -0.2, -10]),
-            new Cube(this.gl, 0.8, [221 / 255, 1, 0, 1], [0, 1.4, -10]),
+            new Cube(this.gl, 1.0, [221 / 255, 1, 0, 1], [0, 0, -10]),
             new Cube(this.gl, 0.9, [192 / 255, 192 / 255, 192 / 255, 1], [-1.7, -0.1, -10]),
             new Cube(this.gl, 0.8, [166 / 255, 124 / 255, 0, 1], [1.58, -0.2, -10]),
         ];
@@ -173,14 +180,20 @@ class Scene {
             this.gl.uniform1i(this.programInfo.uniformLocations.lightModel, this.state.lightModel);
             this.gl.uniform1i(this.programInfo.uniformLocations.shading, this.state.shading);
             this.gl.uniform1f(this.programInfo.uniformLocations.lightShininess, this.state.lightShininess);
-
+            this.gl.uniform1i(this.programInfo.uniformLocations.textureSelect, this.state.textureSelect);
 
             const texture = this.textures[index];
             const textureUnit = this.gl.TEXTURE0 + index;
-
             this.gl.activeTexture(textureUnit);
             this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+
             this.gl.uniform1i(this.programInfo.uniformLocations.uSampler, index);
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+
+            const texture2 = this.textures[3];
+            this.gl.activeTexture(this.gl.TEXTURE1 + index);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, texture2);
+            this.gl.uniform1i(this.programInfo.uniformLocations.uSampler2, 3);
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
             this.gl.drawElements(this.gl.TRIANGLES, buffers.raw_indices.length, this.gl.UNSIGNED_SHORT, 0);

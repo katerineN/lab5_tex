@@ -1,7 +1,4 @@
 const shaderFunctions = `
-float positive_dot(vec3 left, vec3 right) {
-    return max(dot(left, right), 0.0);
-}
         
 float lambert(vec3 normal, vec3 lightPosition, float power) {
     vec3 lightDirection = normalize(lightPosition);

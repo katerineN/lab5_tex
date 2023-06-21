@@ -6,6 +6,7 @@ varying vec4 vPosition;
 varying vec4 vColor;
 varying vec3 vNormal;
 varying vec2 vTextureCoord;
+varying vec2 vIceTextureCoord;
 
 uniform mat4 uModelViewMatrix;
 uniform float uLightPower;
@@ -14,8 +15,10 @@ uniform lowp int uDampingFunction;
 uniform lowp int uShading;
 uniform lowp int uLightModel;
 uniform float uLightShininess;
+uniform int uTextureSelect;
 
 uniform sampler2D uSampler;
+uniform sampler2D uSampler2;
 
 ${shaderFunctions}
 void main(void) {
@@ -29,17 +32,35 @@ void main(void) {
         lightDirection, positionEye3, uLightPower, uLightShininess);
     light = dampLight(uDampingFunction, light);
     
-    vec4 textureColor = texture2D(uSampler, vTextureCoord);
-
-    vec4 vertexColor = vec4(1.0, 1.0, 1.0, 1.0); // Задайте цвет вершины по умолчанию
-    if (vTextureCoord.x >= 0.0 && vTextureCoord.y >= 0.0) {
-        vertexColor = textureColor; // Получите цвет из текстуры
+    vec4 fragColor;
+    if (uTextureSelect == 0) {
+        fragColor = texture2D(uSampler, vTextureCoord) * vColor;
+    } else if (uTextureSelect == 1) {
+        fragColor = texture2D(uSampler, vTextureCoord);
+    } else if (uTextureSelect == 2) {
+        vec4 textureColor = texture2D(uSampler, vTextureCoord);
+        vec4 iceTextureColor = texture2D(uSampler2, vIceTextureCoord);
+        fragColor = textureColor * vColor * iceTextureColor;
     }
-    gl_FragColor = vColor * vertexColor; // Умножьте цвет вершины на цвет из текстуры
-
-
-    //gl_FragColor = vColor * textureColor;
+    
+    gl_FragColor = vColor * fragColor;
     gl_FragColor.rgb *= light;
+    
+    // vec4 textureColor = texture2D(uSampler, vTextureCoord);
+    // vec4 iceTextureColor = texture2D(uSampler2, vIceTextureCoord);
+    //
+    // vec4 vertexColor = vec4(1.0, 1.0, 1.0, 1.0); 
+    // if (vTextureCoord.x >= 0.0 && vTextureCoord.y >= 0.0) {
+    //     vertexColor = textureColor; 
+    // }
+    // vec4 finalColor = vertexColor; 
+    // if (vIceTextureCoord.x >= 0.0 && vIceTextureCoord.y >= 0.0) {
+    //     finalColor = vec4(iceTextureColor.rgb * finalColor.rgb, iceTextureColor.a * finalColor.a * 1.0); 
+    // }
+    
+    //gl_FragColor = vColor * finalColor; 
+    //gl_FragColor = vColor * textureColor;
+    //gl_FragColor.rgb *= light;
     
 }`
 
